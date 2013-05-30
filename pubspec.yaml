@@ -4,9 +4,9 @@ author: Heikki Haapala <hhaapala@gmail.com>
 dependencies:
   logging: any
   siege_engine:
-    path: /home/hhaapala/dart/siege_engine
+    git: git://github.com/Absor/siege_engine.git
   space_shared:
-    path: /home/hhaapala/dart/space_shared
+    git: git://github.com/Absor/space_shared.git
 
 #dependencies:
 #  js: any
