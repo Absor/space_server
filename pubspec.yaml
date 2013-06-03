@@ -2,12 +2,9 @@ name: space_server
 version: 0.1.0
 author: Heikki Haapala <hhaapala@gmail.com>
 dependencies:
+  json_object: any
   logging: any
   siege_engine:
     git: git://github.com/Absor/siege_engine.git
   space_shared:
     git: git://github.com/Absor/space_shared.git
-
-#dependencies:
-#  js: any
-#  unittest: any

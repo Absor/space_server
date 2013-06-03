@@ -5,18 +5,24 @@ import 'dart:io';
 import 'dart:json';
 import 'dart:async';
 import 'package:logging/logging.dart';
+import 'package:json_object/json_object.dart';
 import 'package:siege_engine/siege_engine.dart';
 import 'package:space_shared/space_shared.dart';
 
-part 'server_connection_manager.dart';
+part 'connection_manager.dart';
 part 'log_writer.dart';
 part 'id_manager.dart';
-part 'server_settings.dart';
-part 'message_handler.dart';
+part 'world_controller.dart';
+part 'world_runner.dart';
+part 'message_checker.dart';
 
+JsonObject settings;
 Logger logger;
 
 void main() {
+  File file = new File(new Options().arguments.first);
+  settings = new JsonObject.fromJsonString(file.readAsStringSync());
+  
   // Setup logging
   logger = new Logger("space_server");
   LogWriter logWriter = new LogWriter();
@@ -27,49 +33,26 @@ void main() {
 
 class SpaceServer {
   
-  World _world;
-  num _lastTick;
+  ConnectionManager _cm;
       
   SpaceServer() {
-    _setupWorld();
-    MessageHandler mh = new MessageHandler(_world);
-    ServerConnectionManager cm = new ServerConnectionManager(mh);
-    _setupServer(cm);
-    _lastTick = new DateTime.now().millisecondsSinceEpoch;
-    new Timer.periodic(new Duration(milliseconds:15), (t) =>_runWorld());
+    WorldRunner wr = new WorldRunner();
+    WorldController wc = new WorldController(wr.world);
+    _cm = new ConnectionManager(wc);
+    _setupServer();
   }
   
-  void _setupWorld() {
-    _world = new World();
-    
-    InputProcessingSystem inputProcessingSystem = new InputProcessingSystem();
-    MovementSystem movementSystem = new MovementSystem();
-    
-    inputProcessingSystem.enabled = true;
-    movementSystem.enabled = true;
-    
-    inputProcessingSystem.priority = 5;
-    movementSystem.priority = 10;
-    
-    _world.addSystem(movementSystem);
-    _world.addSystem(inputProcessingSystem);
-  }
-  
-  void _runWorld() {
-    num now = new DateTime.now().millisecondsSinceEpoch;
-    _world.process(now - _lastTick);
-    _lastTick = now;
-  }
-  
-  void _setupServer(ServerConnectionManager cm) {
-    HttpServer.bind(ServerSettings.serverIp, ServerSettings.serverPort).then((HttpServer server) {
+  void _setupServer() {
+    HttpServer.bind(settings.serverIp, settings.serverPort).then((HttpServer server) {
       server.transform(new WebSocketTransformer()).listen(
-          cm.onConnection,
+          _cm.onConnection,
           onError: (error) {
-            logger.info(ServerSettings.webSocketTransformError + " " + error);
+            logger.info("Bad WebSocket request. $error");
           });
     }, onError: (error) {
-      logger.severe(ServerSettings.httpServerBindError + " " + error);
+      logger.severe("Error starting server. $error");
     });
   }
+  
+  // TODO file handling
 }
