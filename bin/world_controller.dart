@@ -35,7 +35,7 @@ class WorldController {
     joinComponents["p"] = position;
     
     RotationComponent rotation = new RotationComponent();
-    rotation.angle = 0;
+    rotation.angleInDegrees = 0;
     player.addComponent(rotation);
     updateComponents["r"] = rotation;
     joinComponents["r"] = rotation;
